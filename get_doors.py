@@ -1,6 +1,6 @@
 #!local/bin/python
 #
-# File: get_door.py
+# File: get_doors.py
 #
 #	Gets state of all doors and returns it to client
 #
