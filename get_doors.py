@@ -8,6 +8,7 @@
 from config_door import *
 import RPi.GPIO as io
 import logging
+import os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -15,7 +16,7 @@ app = Flask(__name__)
 
 # Configure log file
 logging.basicConfig(filename=log_file, level=logging.DEBUG, format=log_format, datefmt=date_format)
-logging.debug('RESTART DOORS-Get')	# log program restart
+logging.debug('RESTART DOORS-'+os.path.basename(__file__))	# log program restart
 
 # URL for getting state of doors
 @app.route("/api/get_doors", methods=['GET'])
@@ -31,12 +32,8 @@ def api_get_doors():
 		# get initial state of door
 		if io.input(pin[door]):	# door open
 			state[door] = OPEN
-			print door + " is OPEN"
 		else:
 			state[door] = CLOSED
-			print door + " is CLOSED"
-
-	print "Got state"
 
 	return jsonify(state)
 

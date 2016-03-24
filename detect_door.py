@@ -12,12 +12,13 @@ import threading
 import errno
 import logging
 import httplib2
+import os
 from flask import Flask, request, json, jsonify
 
 
 # Configure log file
 logging.basicConfig(filename=log_file, level=logging.DEBUG, format=log_format, datefmt=date_format)
-logging.debug('RESTART DOORS-Detect')	# log program restart
+logging.debug('RESTART DOORS-'+os.path.basename(__file__))	# log program restart
 
 # Initialize GPIO
 io.setmode(io.BCM)	# set appropriate mode for reading GPIO
@@ -40,18 +41,15 @@ while True:
 		event = ''
 		if io.input(pin[door]):			# door open
 			if state[door] == CLOSED:	# if door was previously closed, send open message
-				print "got open"
 				state[door] = OPEN
 				event = OPEN
 		else:
 			if state[door] == OPEN:		# if door was previously open, send closed message
-				print "got closed"
 				state[door] = CLOSED
 				event = CLOSED
 
 		if event:
 			timestamp = datetime.datetime.now()
-			print timestamp
 #			timestamp = str(time.time())
 			httplib2.debuglevel     = 0
 			http                    = httplib2.Http()
