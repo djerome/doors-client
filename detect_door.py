@@ -6,7 +6,8 @@
 #
 
 from config_door import *
-import datetime
+from config_client import *
+import time
 import RPi.GPIO as io
 import threading
 import errno
@@ -16,24 +17,13 @@ import os
 from flask import Flask, request, json, jsonify
 
 
-# Configure log file
-logging.basicConfig(filename=log_file, level=logging.DEBUG, format=log_format, datefmt=date_format)
-logging.debug('RESTART DOORS-'+os.path.basename(__file__))	# log program restart
-
-# Initialize GPIO
-io.setmode(io.BCM)	# set appropriate mode for reading GPIO
-for door in doors:
-	io.setup(pin[door], io.IN, pull_up_down=io.PUD_UP)
+# Configure log file and log program restart
+log_restart(os.path.basename(__file__))
 
 # For each door, get initial state
-state = {}	# keep track of current state of each door
+state = get_doors_state()	# keep track of current state of each door
 for door in doors:
-
-	# get initial state of door
-	if io.input(pin[door]):	# door open
-		state[door] = OPEN
-	else:
-		state[door] = CLOSED
+	logging.debug('INIT: ' + door + ',' + state[door])	# log initial door state
 
 # Loop and wait for a new event - only send event when a change of state occurs
 while True:
@@ -49,8 +39,7 @@ while True:
 				event = CLOSED
 
 		if event:
-			timestamp = datetime.datetime.now()
-#			timestamp = str(time.time())
+			logging.debug('EVENT: ' + door + ',' + state[door])	# log receipt of event
 			httplib2.debuglevel     = 0
 			http                    = httplib2.Http()
 			content_type_header     = "application/json"
@@ -58,26 +47,26 @@ while True:
 
 			data = {'door': door, 'event': event}
 
-			event_str = str(timestamp) + ',' + door + ',' + event
 			headers = {'Content-Type': content_type_header}
 
 			server_down = True
 			while server_down:
 				try:
-					print "Sending data to " + door_server
 		        		response, content = http.request(url, 'POST', json.dumps(data), headers=headers)
+					print "Response:"
+				        print (response)
+					print "Content:"
+			       		print (content)
 
 					# log OK message
-					log_str = event_str + ',OK'
-					logging.debug(log_str)
+					logging.debug('CONNECT-Send: ' + door_server + ',OK')	# log successful transmission of event
 
 					server_down = False
 
 				# if error
 				except:
 					print "Error Connecting"
-					log_str = event_str + ',ERROR'
-					logging.debug(log_str)
+					logging.debug('CONNECT-Send: ' + door_server + ',ERROR')	# log unsuccessful transmission of event
 
 					# keep doubling wait time on every failure up to max_wait_time
 					time.sleep(wait_time)
