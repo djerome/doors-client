@@ -25,6 +25,7 @@
 from config_door import *
 from config_client import *
 import time
+from datetime import datetime
 import RPi.GPIO as io
 import threading
 import errno
@@ -56,31 +57,8 @@ class ServiceQ(threading.Thread):
 				# get an event off the queue
 				event_data = event_queue.get()
 
-				# try to connect to door server
-				server_down = True
-				wait_time = init_wait_time
-				while server_down:
-					try:
-			        		response, content = http.request(url, 'POST', json.dumps(event_data), headers=headers)
-						print "Response:"
-					        print (response)
-						print "Content:"
-				       		print (content)
-
-						# log OK message
-						logging.debug('CONNECT-Send: ' + door_server + ',OK')	# log successful transmission of event
-	
-						server_down = False
-	
-					# if error
-					except:
-						print "Error Connecting"
-						logging.debug('CONNECT-Send: ' + door_server + ',ERROR')	# log unsuccessful transmission of event
-
-						# keep doubling wait time on every failure up to max_wait_time
-						time.sleep(wait_time)
-						if wait_time < max_wait_time:
-							wait_time = wait_time + wait_time
+				# send to door server
+				empty = rest_conn(door_server, "5000", "/api/door_event", "POST", event_data)
 
 
 # MAIN
@@ -115,12 +93,13 @@ while True:
 
 		# if an event has occurred, put event on event queue
 		if event:
+#			event_time = datetime.now()
 			event_time = time.time()
-			event_data = {'time': event_time, 'door': door, 'event': event}
+			event_data = {'timestamp': event_time, 'door': door, 'event': event}
 			print "Putting Event Data on Q:"
 			print event_data
 			event_queue.put(event_data)
 			if not event_queue.empty():
 				print "Queue Size: " + str(event_queue.qsize())
 
-			logging.debug('EVENT: ' + door + ',' + state[door])	# log receipt of event
+			logging.debug('EVENT: ' + door + ',' + state[door])	# log event

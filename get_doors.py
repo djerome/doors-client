@@ -21,8 +21,6 @@ app = Flask(__name__)
 @app.route("/api/get_doors", methods=['GET'])
 def api_get_doors():
 
-	logging.debug('CONNECT-Recv: ' + request.path)	# log connection receive request
-
 	return jsonify(get_doors_state())
 
 if __name__ == '__main__':
