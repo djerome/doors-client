@@ -64,12 +64,12 @@ class ServiceQ(threading.Thread):
 # MAIN
 
 # Configure log file and log program restart
-log_restart(os.path.basename(__file__))
+logger = log_restart(os.path.basename(__file__))
 
 # For each door, get initial state
 state = get_doors_state()	# keep track of current state of each door
 for door in doors:
-	logging.debug('INIT: ' + door + ',' + state[door])	# log initial door state
+	logger.info('INIT: ' + door + ',' + state[door])	# log initial door state
 	print 'INIT: ' + door + ',' + state[door]	# log initial door state
 
 # Create event queue
@@ -102,4 +102,4 @@ while True:
 			if not event_queue.empty():
 				print "Queue Size: " + str(event_queue.qsize())
 
-			logging.debug('EVENT: ' + door + ',' + state[door])	# log event
+			logger.info('EVENT: ' + door + ',' + state[door])	# log event

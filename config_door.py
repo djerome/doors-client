@@ -1,20 +1,24 @@
 #
 #	config_door.py
 #
-#	Defines constants used in door application
+#	Defines constants and functions used in door application
 #
 
 import httplib2
 from flask import json
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import time
 
-# Constants used on server and client
+# Doors
 GARAGE = "Garage"
 MAN = "Man"
 doors = [GARAGE, MAN]
+
+# door states
 OPEN = "Open"
 CLOSED = "Closed"
+
 OFF = "Off"
 ON = "On"
 TIMER = "Timer"
@@ -88,12 +92,12 @@ def rest_conn(host, port, path, method, data):
 				print content
 				result = {}
 			host_down = False
-			logging.debug('CONNECT:' + url + ',' + method + ',OK')
+			logger.info('CONNECT:' + url + ',' + method + ',OK')
 			return result
 		except:
 			status = 'Error'
 			print "Error Connecting ..."
-			logging.debug('CONNECT:' + url + ',' + method + ',Error')
+			logger.error('CONNECT:' + url + ',' + method + ',Error')
 			time.sleep(wait_time)
 			if wait_time < max_wait_time:
 				wait_time = wait_time + wait_time
@@ -101,7 +105,7 @@ def rest_conn(host, port, path, method, data):
 
 
 def log_restart(script_name):
-	"""Log restart of script"""
+	"""Setup logger and log restart of script"""
 
 	### Inputs ###
 	#
@@ -109,10 +113,28 @@ def log_restart(script_name):
 	#
 	### Outputs ###
 	#
-	#	None
+	#	logger: the logger that performs the logging
 	#
 	###
 
-	# Configure log file
-	logging.basicConfig(filename=log_file, level=logging.DEBUG, format=log_format, datefmt=date_format)
-	logging.debug('RESTART: ' + script_name)	# log program restart
+	# create logger
+	logger = logging.getLogger(__name__)
+	logger.setLevel(logging.DEBUG)
+
+	# create timed rotating file handler and set level to debug
+	fh = TimedRotatingFileHandler(log_file, when='D', interval=30, backupCount=12)
+	fh.setLevel(logging.DEBUG)
+
+	# create formatter
+	formatter = logging.Formatter(fmt=log_format, datefmt=date_format)
+
+	# add formatter to fh
+	fh.setFormatter(formatter)
+
+	# add ch to logger
+	logger.addHandler(fh)
+
+	# log program restart
+	logger.info('RESTART: ' + script_name)
+
+	return logger
