@@ -1,11 +1,14 @@
 #
-#	config_client.py
+#	config_door_detect.py
 #
-#	Defines constants used in client door application
+#	Defines functions and constants used by door detect server only
 #
 
 import RPi.GPIO as io
-from config_door import OPEN, CLOSED, doors, pin
+from config_door_common import *
+
+# GPIO pin for each door
+pin = {GARAGE: 23, MAN: 24}
 
 def get_doors_state():
 	"""Get state of both doors from GPIO pins"""
